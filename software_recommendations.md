@@ -3,7 +3,7 @@
 This document specifies various utilities and a library API to be provided
 in support of the ADES format standard.
 
-> DO WE HAVE A LINK TO THE FORMAT SPEC SOMEWHERE?
+[ADES Specification Document](http://minorplanetcenter.net/iau/info/IAU2015_ADES.pdf)
 
 
 ## Utilities
