@@ -40,3 +40,25 @@ Then probably there are several possible directions, some of which can be explor
 
 ### Evaluate PSV->XML techniques
 Direct PSV->XML and PSV->ADES struct->XML represent two ways to do file conversion.  Direct may have fewer lines of code and be more efficient but the decomposition into the two steps of going to and from the ADES struct may leave those steps individually smaller and more maintainable.  Further, if the ADES struct proves useful for library functions, the steps might have separate uses.
+
+### 24 Sep 2015, Evaluation time
+So I implemented the two ways to do PSV to XML.
+
+Direct PSV->XML looked slick at first, but the XML output retained whatever element order was in the PSV and didn't follow the ADES standard order.  A tricky hack fixed the field order in observation records but it's not ideal.  It's tricky, it uses a little temporary workspace, and it only fixes field order, not header order.
+
+Two step library-based conversion uses lots of cut and paste code.  LOC is several times that of the direct converter, and it doesn't even validate yet.
+
+Neither technique do streaming.
+
+Refactor:
+
+* pt, let's call it, would be a function that parses PSV to a libxml2 tree, annotating with line numbers.
+* similarly the standard xml read function parses to a tree annotated with line numbers.
+* validation on an annotated tree gives good error messages.  (validating xml parse does it in one step)
+* the good way to get the ADES standard output order is to populate the C-structs.  (the tree doesn't do it, the pxdirect technique is a too-clever partial hack.)  Libxml2 tree to C-struct would be an internal non-API function. Let's call it tc.
+* API function readPSV then would call pt, validate if requested, and call tc if requested.
+* API function readXML would read, validating if requested, and call tc if requested.
+* API function writePSV goes from C-struct to PSV. This is straightforward in C.  It might also be possible with XSLT.  There is no validation involved here.  If final validation is wanted, it must be done on the output file as a separate step.
+* API function writeXML goes from C-struct to XML through a temporary libxml2 tree. This also is non-validating.  While it is tempting to validate the temporary tree, error messages will be unhelpful without line numbers.  If final validation is wanted, it must be done on the output file as a separate step.
+
+These four API functions should sufficient for in-place validation of both file times and conversion both ways, with or without validation.
